@@ -13,6 +13,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5464D8642DB7E34C003C69F1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; name = Info.plist; path = MacNote/Info.plist; sourceTree = "<group>"; };
 		54A38B112DB79CEC008119EC /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		54A38B122DB79CEC008119EC /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		54A38B172DB79CED008119EC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -35,6 +36,7 @@
 		54A38B052DB79CEC008119EC = {
 			isa = PBXGroup;
 			children = (
+				5464D8642DB7E34C003C69F1 /* Info.plist */,
 				54A38B112DB79CEC008119EC /* AppDelegate.h */,
 				54A38B122DB79CEC008119EC /* AppDelegate.m */,
 				54A38B172DB79CED008119EC /* Assets.xcassets */,
@@ -252,6 +254,7 @@
 				DEVELOPMENT_TEAM = 64H4N973WP;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MacNote/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -282,6 +285,7 @@
 				DEVELOPMENT_TEAM = 64H4N973WP;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MacNote/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
