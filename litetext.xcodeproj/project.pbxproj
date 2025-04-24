@@ -19,7 +19,7 @@
 		54A38B172DB79CED008119EC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		54A38B1C2DB79CED008119EC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		54A38B1E2DB79CED008119EC /* MacNote.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MacNote.entitlements; sourceTree = "<group>"; };
-		54A38B262DB79F29008119EC /* MacNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		54A38B262DB79F29008119EC /* litetext.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = litetext.app; path = /Users/bquast/Documents/MacNote/build/Debug/litetext.app; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,16 +42,15 @@
 				54A38B172DB79CED008119EC /* Assets.xcassets */,
 				54A38B1E2DB79CED008119EC /* MacNote.entitlements */,
 				54A38B1C2DB79CED008119EC /* main.m */,
-				54A38B262DB79F29008119EC /* MacNote.app */,
 			);
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		54A38B0D2DB79CEC008119EC /* MacNote */ = {
+		54A38B0D2DB79CEC008119EC /* litetext */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 54A38B212DB79CED008119EC /* Build configuration list for PBXNativeTarget "MacNote" */;
+			buildConfigurationList = 54A38B212DB79CED008119EC /* Build configuration list for PBXNativeTarget "litetext" */;
 			buildPhases = (
 				54A38B0A2DB79CEC008119EC /* Sources */,
 				54A38B0B2DB79CEC008119EC /* Frameworks */,
@@ -61,11 +60,11 @@
 			);
 			dependencies = (
 			);
-			name = MacNote;
+			name = litetext;
 			packageProductDependencies = (
 			);
 			productName = MacNote;
-			productReference = 54A38B262DB79F29008119EC /* MacNote.app */;
+			productReference = 54A38B262DB79F29008119EC /* litetext.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -82,7 +81,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 54A38B092DB79CEC008119EC /* Build configuration list for PBXProject "MacNote" */;
+			buildConfigurationList = 54A38B092DB79CEC008119EC /* Build configuration list for PBXProject "litetext" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -95,7 +94,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				54A38B0D2DB79CEC008119EC /* MacNote */,
+				54A38B0D2DB79CEC008119EC /* litetext */,
 			);
 		};
 /* End PBXProject section */
@@ -265,7 +264,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "ValiQ-Security.MacNote";
+				PRODUCT_BUNDLE_IDENTIFIER = "ValiQ-Security.litetext";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -296,7 +295,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "ValiQ-Security.MacNote";
+				PRODUCT_BUNDLE_IDENTIFIER = "ValiQ-Security.litetext";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -306,7 +305,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		54A38B092DB79CEC008119EC /* Build configuration list for PBXProject "MacNote" */ = {
+		54A38B092DB79CEC008119EC /* Build configuration list for PBXProject "litetext" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				54A38B1F2DB79CED008119EC /* Debug */,
@@ -315,7 +314,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		54A38B212DB79CED008119EC /* Build configuration list for PBXNativeTarget "MacNote" */ = {
+		54A38B212DB79CED008119EC /* Build configuration list for PBXNativeTarget "litetext" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				54A38B222DB79CED008119EC /* Debug */,

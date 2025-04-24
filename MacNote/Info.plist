@@ -9,16 +9,16 @@
 			<array>
 				<string>txt</string>
 			</array>
-			<key>LSItemContentTypes</key>
-			<array>
-				<string>public.plain-text</string>
-			</array>
 			<key>CFBundleTypeName</key>
 			<string>Flat Text File</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
 			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.plain-text</string>
+			</array>
 		</dict>
 	</array>
 	<key>UTImportedTypeDeclarations</key>
