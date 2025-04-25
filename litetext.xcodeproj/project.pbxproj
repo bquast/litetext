@@ -19,7 +19,7 @@
 		54A38B172DB79CED008119EC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		54A38B1C2DB79CED008119EC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		54A38B1E2DB79CED008119EC /* MacNote.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MacNote.entitlements; sourceTree = "<group>"; };
-		54A38B262DB79F29008119EC /* litetext.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = litetext.app; path = /Users/bquast/Documents/MacNote/build/Debug/litetext.app; sourceTree = "<absolute>"; };
+		54ADCC742DBA62F200F23307 /* litetext.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = litetext.app; path = /Users/bquast/Documents/MacNote/build/Debug/litetext.app; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,7 +64,7 @@
 			packageProductDependencies = (
 			);
 			productName = MacNote;
-			productReference = 54A38B262DB79F29008119EC /* litetext.app */;
+			productReference = 54ADCC742DBA62F200F23307 /* litetext.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
