@@ -1,4 +1,3 @@
-
 // AppDelegate.m
 #import "AppDelegate.h"
 
@@ -32,6 +31,7 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
 
     // --- Status Label Setup ---
     CGFloat statusBarHeight = 22.0; // Height for the status bar label
+    // Initial frame setup - will be adjusted in applyStatusBarVisibility
     self.statusLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, self.window.contentView.bounds.size.width, statusBarHeight)];
     [self.statusLabel setEditable:NO];
     [self.statusLabel setSelectable:NO];
@@ -41,7 +41,7 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
     [self.statusLabel setTextColor:[NSColor secondaryLabelColor]];
     // Use monospaced font, small size
     [self.statusLabel setFont:[NSFont userFixedPitchFontOfSize:[NSFont smallSystemFontSize]]];
-    // Autoresizing: Stick to bottom, stretch width
+    // Autoresizing: Stick to bottom, left, right edges. Flexible width.
     [self.statusLabel setAutoresizingMask:(NSViewWidthSizable | NSViewMaxYMargin)];
     // Add status label to the window's content view
     [self.window.contentView addSubview:self.statusLabel];
@@ -148,9 +148,9 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
     NSRange lineRange = [text lineRangeForRange:NSMakeRange(cursorPosition, 0)];
     NSUInteger columnNumber = cursorPosition - lineRange.location + 1;
 
-    // Update the label with padding and no comma
-    // Add right padding with spaces
-    self.statusLabel.stringValue = [NSString stringWithFormat:@"Line: %lu   Col: %lu   ", (unsigned long)lineNumber, (unsigned long)columnNumber];
+    // Update the label with spaces and no comma
+    // No extra padding spaces needed here now, frame adjustment handles it.
+    self.statusLabel.stringValue = [NSString stringWithFormat:@"Line: %lu   Col: %lu", (unsigned long)lineNumber, (unsigned long)columnNumber];
 }
 
 // Action method for the "Show Status Bar" menu item
@@ -166,9 +166,14 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
 - (void)applyStatusBarVisibility {
     BOOL shouldBeVisible = [[NSUserDefaults standardUserDefaults] boolForKey:kStatusBarVisibleKey];
     CGFloat statusBarHeight = 22.0;
+    CGFloat rightPadding = 8.0; // Define padding from the right edge
     NSRect contentBounds = self.window.contentView.bounds;
     NSRect scrollFrame = contentBounds;
-    NSRect statusFrame = NSMakeRect(0, 0, contentBounds.size.width, statusBarHeight);
+    // Adjust status frame for padding
+    NSRect statusFrame = NSMakeRect(0, // X origin
+                                   0, // Y origin
+                                   contentBounds.size.width - rightPadding, // Width (reduced by padding)
+                                   statusBarHeight); // Height
 
     if (shouldBeVisible) {
         self.statusLabel.hidden = NO;
@@ -181,11 +186,17 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
     }
 
     // Animate the frame changes for smoothness (optional)
-    [[self.scrollView animator] setFrame:scrollFrame];
-    [[self.statusLabel animator] setFrame:statusFrame]; // Keep status label frame consistent for autoresizing
+    // Use non-animator calls first to set the final state immediately,
+    // then optionally use animator if smooth transition is desired.
+    // For simplicity and immediate effect, we'll skip animator here.
+    [self.scrollView setFrame:scrollFrame];
+    [self.statusLabel setFrame:statusFrame];
 
     // Update the menu item state
-    self.statusBarMenuItem.state = shouldBeVisible ? NSControlStateValueOn : NSControlStateValueOff;
+    // Ensure statusBarMenuItem exists before accessing it
+    if (self.statusBarMenuItem) {
+         self.statusBarMenuItem.state = shouldBeVisible ? NSControlStateValueOn : NSControlStateValueOff;
+    }
 
     // Update the status text (will clear if hidden)
     [self updateStatusLabel];
