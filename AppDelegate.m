@@ -1,7 +1,11 @@
 // AppDelegate.m
 #import "AppDelegate.h"
 
+// Private interface category
 @interface AppDelegate ()
+// Only declare properties or methods truly private to the AppDelegate implementation here.
+// Standard selectors handled by the responder chain should NOT be declared here.
+
 // Private property to hold the main application window.
 @property (strong) NSWindow *window;
 @end
@@ -16,17 +20,37 @@
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
     [self.window center];
-    [self.window setTitle:@"MacNote"];
+    [self.window setTitle:@"litetext"];
     [self.window setDelegate:self];
-    // Allow the window to restore its state (position, size)
     [self.window setRestorable:YES];
-    // Set a unique identifier for the window to be restored
-    self.window.identifier = @"MacNoteMainWindow";
-    [self.window setRestorationClass:[self class]]; // Use AppDelegate for restoration
+    self.window.identifier = @"litetextMainWindow";
+    [self.window setRestorationClass:[self class]];
+
+    // --- Status Label Setup ---
+    CGFloat statusBarHeight = 22.0; // Height for the status bar label
+    self.statusLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, self.window.contentView.bounds.size.width, statusBarHeight)];
+    [self.statusLabel setEditable:NO];
+    [self.statusLabel setSelectable:NO];
+    [self.statusLabel setBezeled:NO];
+    [self.statusLabel setDrawsBackground:NO];
+    [self.statusLabel setAlignment:NSTextAlignmentRight];
+    [self.statusLabel setTextColor:[NSColor secondaryLabelColor]]; // Use a standard subtle color
+    [self.statusLabel setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
+    // Autoresizing: Stick to bottom, stretch width
+    [self.statusLabel setAutoresizingMask:(NSViewWidthSizable | NSViewMaxYMargin)];
+    // Add status label to the window's content view
+    [self.window.contentView addSubview:self.statusLabel];
+
 
     // --- ScrollView and TextView Setup ---
-    self.scrollView = [[NSScrollView alloc] initWithFrame:self.window.contentView.bounds];
-    [self.scrollView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+    // Adjust scroll view frame to make space for the status bar
+    NSRect scrollFrame = self.window.contentView.bounds;
+    scrollFrame.origin.y += statusBarHeight; // Move origin up
+    scrollFrame.size.height -= statusBarHeight; // Reduce height
+
+    self.scrollView = [[NSScrollView alloc] initWithFrame:scrollFrame];
+    // Autoresizing: Stick to top/left/right, flexible height
+    [self.scrollView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable | NSViewMinYMargin)];
     [self.scrollView setHasVerticalScroller:YES];
     [self.scrollView setHasHorizontalScroller:YES];
     [self.scrollView setBorderType:NSNoBorder];
@@ -36,13 +60,13 @@
     self.textView = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, contentSize.width, contentSize.height)];
 
     // Configure text view properties
-    [self.textView setMinSize:NSMakeSize(0.0, contentSize.height)]; // Allow vertical growth
+    [self.textView setMinSize:NSMakeSize(0.0, contentSize.height)];
     [self.textView setMaxSize:NSMakeSize(FLT_MAX, FLT_MAX)];
     [self.textView setVerticallyResizable:YES];
-    [self.textView setHorizontallyResizable:NO]; // Let scrollview handle horizontal scrolling
-    [self.textView setAutoresizingMask:NSViewWidthSizable]; // Resize width with scroll view
-    [[self.textView textContainer] setWidthTracksTextView:YES]; // Text wraps to view width
-    [[self.textView textContainer] setContainerSize:NSMakeSize(contentSize.width, FLT_MAX)]; // Allow infinite vertical size
+    [self.textView setHorizontallyResizable:NO];
+    [self.textView setAutoresizingMask:NSViewWidthSizable];
+    [[self.textView textContainer] setWidthTracksTextView:YES];
+    [[self.textView textContainer] setContainerSize:NSMakeSize(contentSize.width, FLT_MAX)];
 
     [self.textView setFont:[NSFont userFixedPitchFontOfSize:12.0]];
     [self.textView setContinuousSpellCheckingEnabled:YES];
@@ -50,18 +74,63 @@
     [self.textView setAutomaticDashSubstitutionEnabled:NO];
     [self.textView setAllowsUndo:YES];
 
+    // Set the text view's delegate to self to receive selection change notifications
+    self.textView.delegate = self;
+
     // Embed the text view within the scroll view.
     [self.scrollView setDocumentView:self.textView];
 
-    // Add the scroll view to the window's content view.
-    [self.window setContentView:self.scrollView];
+    // Add the scroll view to the window's content view (above the status label)
+    [self.window.contentView addSubview:self.scrollView];
+
 
     // --- Menu Setup ---
     [self setupMainMenu];
 
+    // --- Initial Status Update ---
+    [self updateStatusLabel]; // Update status label initially
+
     // --- Final Window Display ---
     [self.window makeKeyAndOrderFront:nil];
 }
+
+// Delegate method called when the text view's selection changes
+- (void)textViewDidChangeSelection:(NSNotification *)notification {
+    [self updateStatusLabel];
+}
+
+// Calculates and updates the status label text
+- (void)updateStatusLabel {
+    if (!self.textView || !self.statusLabel) {
+        return; // Safety check
+    }
+
+    NSRange selectedRange = [self.textView selectedRange];
+    NSString *text = self.textView.string;
+    NSUInteger cursorPosition = selectedRange.location;
+
+    // Calculate line number
+    NSUInteger lineNumber = 1;
+    NSUInteger currentPosition = 0;
+    while (currentPosition < cursorPosition) {
+        NSRange newlineRange = [text rangeOfString:@"\n"
+                                            options:0
+                                              range:NSMakeRange(currentPosition, cursorPosition - currentPosition)];
+        if (newlineRange.location == NSNotFound) {
+            break; // No more newlines before cursor
+        }
+        lineNumber++;
+        currentPosition = NSMaxRange(newlineRange);
+    }
+
+    // Calculate column number
+    NSRange lineRange = [text lineRangeForRange:NSMakeRange(cursorPosition, 0)];
+    NSUInteger columnNumber = cursorPosition - lineRange.location + 1;
+
+    // Update the label
+    self.statusLabel.stringValue = [NSString stringWithFormat:@"Line: %lu, Col: %lu  ", (unsigned long)lineNumber, (unsigned long)columnNumber]; // Added padding
+}
+
 
 // Sets up the main application menu bar with more standard items.
 - (void)setupMainMenu {
@@ -76,122 +145,88 @@
     }
 
     // --- App Menu ---
-    // Create the application menu item (e.g., "MacNote").
     NSMenuItem *appMenuItem = [[NSMenuItem alloc] initWithTitle:@"Application" action:nil keyEquivalent:@""];
     [mainMenu addItem:appMenuItem];
-
-    NSMenu *appMenu = [[NSMenu alloc] initWithTitle:NSProcessInfo.processInfo.processName]; // Use app name dynamically
+    NSMenu *appMenu = [[NSMenu alloc] initWithTitle:NSProcessInfo.processInfo.processName];
     [appMenuItem setSubmenu:appMenu];
-
-    // Add "About MacNote" item
     NSString *aboutTitle = [NSString stringWithFormat:@"About %@", NSProcessInfo.processInfo.processName];
     NSMenuItem *aboutItem = [[NSMenuItem alloc] initWithTitle:aboutTitle action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@""];
     [appMenu addItem:aboutItem];
-
-    [appMenu addItem:[NSMenuItem separatorItem]]; // Separator
-
-    // Add standard Services menu item
+    [appMenu addItem:[NSMenuItem separatorItem]];
     NSMenuItem *servicesItem = [[NSMenuItem alloc] initWithTitle:@"Services" action:nil keyEquivalent:@""];
     NSMenu *servicesMenu = [[NSMenu alloc] initWithTitle:@"Services"];
-    [NSApp setServicesMenu:servicesMenu]; // Assign the services menu
+    [NSApp setServicesMenu:servicesMenu];
     [servicesItem setSubmenu:servicesMenu];
     [appMenu addItem:servicesItem];
-
-    [appMenu addItem:[NSMenuItem separatorItem]]; // Separator
-
-    // Add "Hide MacNote" item
+    [appMenu addItem:[NSMenuItem separatorItem]];
     NSString *hideTitle = [NSString stringWithFormat:@"Hide %@", NSProcessInfo.processInfo.processName];
     NSMenuItem *hideItem = [[NSMenuItem alloc] initWithTitle:hideTitle action:@selector(hide:) keyEquivalent:@"h"];
     [appMenu addItem:hideItem];
-
-    // Add "Hide Others" item
     NSMenuItem *hideOthersItem = [[NSMenuItem alloc] initWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@"h"];
     [hideOthersItem setKeyEquivalentModifierMask:(NSEventModifierFlagOption | NSEventModifierFlagCommand)];
     [appMenu addItem:hideOthersItem];
-
-    // Add "Show All" item
     NSMenuItem *showAllItem = [[NSMenuItem alloc] initWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
     [appMenu addItem:showAllItem];
-
-    [appMenu addItem:[NSMenuItem separatorItem]]; // Separator
-
-    // Add "Quit MacNote" item
+    [appMenu addItem:[NSMenuItem separatorItem]];
     NSString *quitTitle = [NSString stringWithFormat:@"Quit %@", NSProcessInfo.processInfo.processName];
     NSMenuItem *quitItem = [[NSMenuItem alloc] initWithTitle:quitTitle action:@selector(terminate:) keyEquivalent:@"q"];
     [appMenu addItem:quitItem];
-
 
     // --- File Menu ---
     NSMenuItem *fileMenuItem = [[NSMenuItem alloc] initWithTitle:@"File" action:nil keyEquivalent:@""];
     [mainMenu addItem:fileMenuItem];
     NSMenu *fileMenu = [[NSMenu alloc] initWithTitle:@"File"];
     [fileMenuItem setSubmenu:fileMenu];
-
     NSMenuItem *openItem = [[NSMenuItem alloc] initWithTitle:@"Open…" action:@selector(openDocument:) keyEquivalent:@"o"];
     [fileMenu addItem:openItem];
-
     [fileMenu addItem:[NSMenuItem separatorItem]];
-
     NSMenuItem *saveItem = [[NSMenuItem alloc] initWithTitle:@"Save…" action:@selector(saveDocument:) keyEquivalent:@"s"];
     [fileMenu addItem:saveItem];
-
-    // Add Save As... (can point to the same saveDocument: for simplicity now)
-    NSMenuItem *saveAsItem = [[NSMenuItem alloc] initWithTitle:@"Save As…" action:@selector(saveDocument:) keyEquivalent:@"S"]; // Shift-Command-S
+    NSMenuItem *saveAsItem = [[NSMenuItem alloc] initWithTitle:@"Save As…" action:@selector(saveDocument:) keyEquivalent:@"S"];
     [saveAsItem setKeyEquivalentModifierMask:(NSEventModifierFlagShift | NSEventModifierFlagCommand)];
     [fileMenu addItem:saveAsItem];
-
     [fileMenu addItem:[NSMenuItem separatorItem]];
-
     NSMenuItem *closeItem = [[NSMenuItem alloc] initWithTitle:@"Close" action:@selector(performClose:) keyEquivalent:@"w"];
      [fileMenu addItem:closeItem];
 
-
-    // --- Edit Menu (Standard items - handled by responder chain) ---
+    // --- Edit Menu ---
     NSMenuItem *editMenuItem = [[NSMenuItem alloc] initWithTitle:@"Edit" action:nil keyEquivalent:@""];
     [mainMenu addItem:editMenuItem];
     NSMenu *editMenu = [[NSMenu alloc] initWithTitle:@"Edit"];
     [editMenuItem setSubmenu:editMenu];
-
     [editMenu addItemWithTitle:@"Undo" action:@selector(undo:) keyEquivalent:@"z"];
-    [editMenu addItemWithTitle:@"Redo" action:@selector(redo:) keyEquivalent:@"Z"]; // Shift-Command-Z
+    [editMenu addItemWithTitle:@"Redo" action:@selector(redo:) keyEquivalent:@"Z"];
     [editMenu addItem:[NSMenuItem separatorItem]];
     [editMenu addItemWithTitle:@"Cut" action:@selector(cut:) keyEquivalent:@"x"];
     [editMenu addItemWithTitle:@"Copy" action:@selector(copy:) keyEquivalent:@"c"];
     [editMenu addItemWithTitle:@"Paste" action:@selector(paste:) keyEquivalent:@"v"];
     [editMenu addItemWithTitle:@"Select All" action:@selector(selectAll:) keyEquivalent:@"a"];
 
-
-    // --- View Menu (Placeholder) ---
+    // --- View Menu ---
     NSMenuItem *viewMenuItem = [[NSMenuItem alloc] initWithTitle:@"View" action:nil keyEquivalent:@""];
     [mainMenu addItem:viewMenuItem];
     NSMenu *viewMenu = [[NSMenu alloc] initWithTitle:@"View"];
     [viewMenuItem setSubmenu:viewMenu];
-
     // Placeholder items - these don't do anything yet
     [viewMenu addItemWithTitle:@"Show Line Numbers" action:nil keyEquivalent:@""];
-    [viewMenu addItemWithTitle:@"Show Status Bar" action:nil keyEquivalent:@""];
+    [viewMenu addItemWithTitle:@"Show Status Bar" action:nil keyEquivalent:@""]; // This menu item doesn't control the new label
 
-
-    // --- Window Menu (Standard items - handled by NSApplication) ---
+    // --- Window Menu ---
     NSMenuItem *windowMenuItem = [[NSMenuItem alloc] initWithTitle:@"Window" action:nil keyEquivalent:@""];
     [mainMenu addItem:windowMenuItem];
     NSMenu *windowMenu = [[NSMenu alloc] initWithTitle:@"Window"];
     [windowMenuItem setSubmenu:windowMenu];
-
     [windowMenu addItemWithTitle:@"Minimize" action:@selector(performMiniaturize:) keyEquivalent:@"m"];
     [windowMenu addItemWithTitle:@"Zoom" action:@selector(performZoom:) keyEquivalent:@""];
     [windowMenu addItem:[NSMenuItem separatorItem]];
     [windowMenu addItemWithTitle:@"Bring All to Front" action:@selector(arrangeInFront:) keyEquivalent:@""];
 
-
-    // --- Help Menu (Standard items - handled by NSApplication) ---
+    // --- Help Menu ---
     NSMenuItem *helpMenuItem = [[NSMenuItem alloc] initWithTitle:@"Help" action:nil keyEquivalent:@""];
     [mainMenu addItem:helpMenuItem];
     NSMenu *helpMenu = [[NSMenu alloc] initWithTitle:@"Help"];
     [helpMenuItem setSubmenu:helpMenu];
-    // The main help item usually searches Help automatically
     [helpMenu addItemWithTitle:[NSString stringWithFormat:@"%@ Help", NSProcessInfo.processInfo.processName] action:@selector(showHelp:) keyEquivalent:@"?"];
-
 
     // Assign the completed menu to the application
     [NSApp setMainMenu:mainMenu];
@@ -206,35 +241,11 @@
     [openPanel setCanChooseDirectories:NO];
     [openPanel setAllowsMultipleSelection:NO];
 
-    // Use block-based API for modern practice
     [openPanel beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse result) {
         if (result == NSModalResponseOK) {
             NSURL *fileURL = [openPanel URL];
             if (fileURL) {
-                NSError *error = nil;
-                NSLog(@"Attempting to open file at URL: %@", fileURL); // Log attempt
-                NSString *fileContents = [NSString stringWithContentsOfURL:fileURL
-                                                                  encoding:NSUTF8StringEncoding
-                                                                     error:&error];
-                if (fileContents) {
-                    // Ensure textView exists before setting string
-                    if (self.textView) {
-                         NSLog(@"Successfully read file content.");
-                        [self.textView setString:fileContents];
-                        [self.window setTitleWithRepresentedFilename:[fileURL path]]; // Use standard method to set title and proxy icon
-                        [self.window setDocumentEdited:NO]; // Mark document as not edited after opening
-                    } else {
-                         NSLog(@"Error: TextView is nil when trying to set string.");
-                    }
-
-                } else {
-                    NSLog(@"Error reading file: %@", [error localizedDescription]); // Log error
-                    NSAlert *alert = [[NSAlert alloc] init];
-                    [alert setMessageText:@"Error Opening File"];
-                    [alert setInformativeText:[error localizedDescription]];
-                    [alert addButtonWithTitle:@"OK"];
-                    [alert beginSheetModalForWindow:self.window completionHandler:nil]; // Use sheet for alert
-                }
+                [self openFileAtURL:fileURL];
             } else {
                  NSLog(@"Error: Open panel returned OK but URL is nil.");
             }
@@ -246,12 +257,11 @@
 
 // Action method called when "File > Save..." or "Save As..." is selected.
 - (IBAction)saveDocument:(id)sender {
-     NSLog(@"saveDocument: called by sender: %@", sender); // Log entry
+     NSLog(@"saveDocument: called by sender: %@", sender);
 
-     // Ensure textView exists before trying to save
      if (!self.textView) {
          NSLog(@"Error: Cannot save, textView is nil.");
-         NSBeep(); // Simple feedback
+         NSBeep();
          return;
      }
 
@@ -259,15 +269,14 @@
     [savePanel setNameFieldStringValue:@"Untitled.txt"];
     [savePanel setAllowedFileTypes:@[@"txt"]];
 
-    // Use block-based API for modern practice
     [savePanel beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse result) {
-         NSLog(@"Save panel completed with result: %ld", (long)result); // Log result
+         NSLog(@"Save panel completed with result: %ld", (long)result);
         if (result == NSModalResponseOK) {
             NSURL *fileURL = [savePanel URL];
             if (fileURL) {
                 NSError *error = nil;
-                NSString *fileContents = [self.textView string]; // Get content *after* panel is confirmed
-                 NSLog(@"Attempting to save file to URL: %@", fileURL); // Log attempt
+                NSString *fileContents = [self.textView string];
+                 NSLog(@"Attempting to save file to URL: %@", fileURL);
 
                 BOOL success = [fileContents writeToURL:fileURL
                                              atomically:YES
@@ -275,15 +284,15 @@
                                                   error:&error];
                 if (success) {
                      NSLog(@"File saved successfully.");
-                    [self.window setTitleWithRepresentedFilename:[fileURL path]]; // Update title and proxy icon
-                    [self.window setDocumentEdited:NO]; // Mark document as saved
+                    [self.window setTitleWithRepresentedFilename:[fileURL path]];
+                    [self.window setDocumentEdited:NO];
                 } else {
-                     NSLog(@"Error saving file: %@", [error localizedDescription]); // Log error
+                     NSLog(@"Error saving file: %@", [error localizedDescription]);
                     NSAlert *alert = [[NSAlert alloc] init];
                     [alert setMessageText:@"Error Saving File"];
                     [alert setInformativeText:[error localizedDescription]];
                     [alert addButtonWithTitle:@"OK"];
-                    [alert beginSheetModalForWindow:self.window completionHandler:nil]; // Use sheet for alert
+                    [alert beginSheetModalForWindow:self.window completionHandler:nil];
                 }
             } else {
                  NSLog(@"Error: Save panel returned OK but URL is nil.");
@@ -294,10 +303,58 @@
     }];
 }
 
+// Delegate method called when the application is asked to open a file (e.g., double-click in Finder)
+- (BOOL)application:(NSApplication *)sender openFile:(NSString *)filename {
+    NSLog(@"application:openFile: called with filename: %@", filename);
+    NSURL *fileURL = [NSURL fileURLWithPath:filename];
+    return [self openFileAtURL:fileURL];
+}
+
+// Common method to open and display a file from a URL
+- (BOOL)openFileAtURL:(NSURL *)fileURL {
+    if (!fileURL) {
+        return NO;
+    }
+
+    if (!self.window || !self.textView) {
+        NSLog(@"Error opening file: Window or TextView not ready.");
+        return NO;
+    }
+
+    NSError *error = nil;
+    NSLog(@"Attempting to open file at URL: %@", fileURL);
+    NSString *fileContents = [NSString stringWithContentsOfURL:fileURL
+                                                      encoding:NSUTF8StringEncoding
+                                                         error:&error];
+    if (fileContents) {
+        NSLog(@"Successfully read file content.");
+        [self.textView setString:fileContents];
+        [self.window setTitleWithRepresentedFilename:[fileURL path]];
+        [self.window setDocumentEdited:NO];
+        // Update status after loading new content
+        [self updateStatusLabel];
+        return YES;
+    } else {
+        NSLog(@"Error reading file: %@", [error localizedDescription]);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert setMessageText:@"Error Opening File"];
+            [alert setInformativeText:[error localizedDescription]];
+            [alert addButtonWithTitle:@"OK"];
+             if (self.window) {
+                [alert beginSheetModalForWindow:self.window completionHandler:nil];
+             } else {
+                 [alert runModal];
+             }
+        });
+        return NO;
+    }
+}
+
 
 // Delegate method called before the application terminates.
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
-    // Insert code here to tear down your application
+    // Clean up observer if needed, though using delegate is cleaner
 }
 
 // Delegate method to determine if the app should terminate when the last window is closed.
@@ -307,14 +364,10 @@
 
 // Required for window restoration
 + (void)restoreWindowWithIdentifier:(NSString *)identifier state:(NSCoder *)state completionHandler:(void (^)(NSWindow *, NSError *))completionHandler {
-     // In a more complex app, you'd find the right window or create a new one based on the identifier/state.
-     // For this single-window app, we can assume it's the main window if the app delegate exists.
      AppDelegate *appDelegate = (AppDelegate *)[NSApp delegate];
-     if (appDelegate.window && [identifier isEqualToString:appDelegate.window.identifier]) {
+     if (appDelegate.window && [identifier isEqualToString:@"litetextMainWindow"]) {
          completionHandler(appDelegate.window, nil);
      } else {
-         // Handle error - couldn't find the window to restore
-         // Use a generic error code '0' instead of the potentially undeclared NSWindowRestorationError
          NSError *error = [NSError errorWithDomain:NSCocoaErrorDomain code:0 userInfo:nil];
          completionHandler(nil, error);
      }
