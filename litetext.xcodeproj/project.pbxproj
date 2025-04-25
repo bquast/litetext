@@ -19,7 +19,7 @@
 		54A38B172DB79CED008119EC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		54A38B1C2DB79CED008119EC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		54A38B1E2DB79CED008119EC /* MacNote.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MacNote.entitlements; sourceTree = "<group>"; };
-		54ADCC742DBA62F200F23307 /* litetext.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = litetext.app; path = /Users/bquast/Documents/MacNote/build/Debug/litetext.app; sourceTree = "<absolute>"; };
+		54BF2E922DBBB68E00B115E9 /* litetext.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = litetext.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,6 +42,7 @@
 				54A38B172DB79CED008119EC /* Assets.xcassets */,
 				54A38B1E2DB79CED008119EC /* MacNote.entitlements */,
 				54A38B1C2DB79CED008119EC /* main.m */,
+				54BF2E922DBBB68E00B115E9 /* litetext.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -64,7 +65,7 @@
 			packageProductDependencies = (
 			);
 			productName = MacNote;
-			productReference = 54ADCC742DBA62F200F23307 /* litetext.app */;
+			productReference = 54BF2E922DBBB68E00B115E9 /* litetext.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -263,7 +264,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "ValiQ-Security.litetext";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -294,7 +295,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "ValiQ-Security.litetext";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

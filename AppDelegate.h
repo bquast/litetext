@@ -14,6 +14,9 @@
 @property (strong) NSScrollView *scrollView;
 // Property to hold the status label.
 @property (strong) NSTextField *statusLabel;
+// Property to hold the menu item for toggling the status bar
+@property (strong) NSMenuItem *statusBarMenuItem;
 
 
 @end
+

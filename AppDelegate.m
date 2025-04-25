@@ -1,5 +1,9 @@
+
 // AppDelegate.m
 #import "AppDelegate.h"
+
+// Define keys for UserDefaults
+static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
 
 // Private interface category
 @interface AppDelegate ()
@@ -34,21 +38,17 @@
     [self.statusLabel setBezeled:NO];
     [self.statusLabel setDrawsBackground:NO];
     [self.statusLabel setAlignment:NSTextAlignmentRight];
-    [self.statusLabel setTextColor:[NSColor secondaryLabelColor]]; // Use a standard subtle color
-    [self.statusLabel setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
+    [self.statusLabel setTextColor:[NSColor secondaryLabelColor]];
+    // Use monospaced font, small size
+    [self.statusLabel setFont:[NSFont userFixedPitchFontOfSize:[NSFont smallSystemFontSize]]];
     // Autoresizing: Stick to bottom, stretch width
     [self.statusLabel setAutoresizingMask:(NSViewWidthSizable | NSViewMaxYMargin)];
     // Add status label to the window's content view
     [self.window.contentView addSubview:self.statusLabel];
 
-
     // --- ScrollView and TextView Setup ---
-    // Adjust scroll view frame to make space for the status bar
-    NSRect scrollFrame = self.window.contentView.bounds;
-    scrollFrame.origin.y += statusBarHeight; // Move origin up
-    scrollFrame.size.height -= statusBarHeight; // Reduce height
-
-    self.scrollView = [[NSScrollView alloc] initWithFrame:scrollFrame];
+    // Frame is calculated later based on status bar visibility
+    self.scrollView = [[NSScrollView alloc] initWithFrame:NSZeroRect]; // Start with zero rect
     // Autoresizing: Stick to top/left/right, flexible height
     [self.scrollView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable | NSViewMinYMargin)];
     [self.scrollView setHasVerticalScroller:YES];
@@ -56,19 +56,19 @@
     [self.scrollView setBorderType:NSNoBorder];
 
     // Use the content size of the scroll view for the text view frame
-    NSSize contentSize = [self.scrollView contentSize];
-    self.textView = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, contentSize.width, contentSize.height)];
+    // Note: TextView frame will be adjusted by the scroll view
+    self.textView = [[NSTextView alloc] initWithFrame:NSZeroRect];
 
     // Configure text view properties
-    [self.textView setMinSize:NSMakeSize(0.0, contentSize.height)];
+    [self.textView setMinSize:NSMakeSize(0.0, 0.0)]; // Let scrollview handle min size based on content
     [self.textView setMaxSize:NSMakeSize(FLT_MAX, FLT_MAX)];
     [self.textView setVerticallyResizable:YES];
     [self.textView setHorizontallyResizable:NO];
-    [self.textView setAutoresizingMask:NSViewWidthSizable];
+    [self.textView setAutoresizingMask:NSViewWidthSizable]; // Only resize width with scroll view
     [[self.textView textContainer] setWidthTracksTextView:YES];
-    [[self.textView textContainer] setContainerSize:NSMakeSize(contentSize.width, FLT_MAX)];
+    [[self.textView textContainer] setContainerSize:NSMakeSize(FLT_MAX, FLT_MAX)]; // Allow infinite size
 
-    [self.textView setFont:[NSFont userFixedPitchFontOfSize:12.0]];
+    [self.textView setFont:[NSFont userFixedPitchFontOfSize:12.0]]; // Main text view font
     [self.textView setContinuousSpellCheckingEnabled:YES];
     [self.textView setAutomaticQuoteSubstitutionEnabled:NO];
     [self.textView setAutomaticDashSubstitutionEnabled:NO];
@@ -85,7 +85,10 @@
 
 
     // --- Menu Setup ---
-    [self setupMainMenu];
+    [self setupMainMenu]; // Setup menus *before* applying initial status bar state
+
+    // --- Apply Initial Status Bar State ---
+    [self applyStatusBarVisibility]; // Sets visibility and adjusts layout
 
     // --- Initial Status Update ---
     [self updateStatusLabel]; // Update status label initially
@@ -101,34 +104,91 @@
 
 // Calculates and updates the status label text
 - (void)updateStatusLabel {
-    if (!self.textView || !self.statusLabel) {
-        return; // Safety check
+    if (!self.textView || !self.statusLabel || self.statusLabel.isHidden) {
+        // Don't update if hidden or not ready
+        if(self.statusLabel) self.statusLabel.stringValue = @""; // Clear if hidden
+        return;
     }
 
     NSRange selectedRange = [self.textView selectedRange];
     NSString *text = self.textView.string;
+
+    // Handle case where text might be nil or empty
+    if (!text) text = @"";
+
     NSUInteger cursorPosition = selectedRange.location;
+    // Ensure cursorPosition is within bounds
+    if (cursorPosition > text.length) {
+        cursorPosition = text.length;
+    }
+
 
     // Calculate line number
     NSUInteger lineNumber = 1;
     NSUInteger currentPosition = 0;
+    NSRange searchRange = NSMakeRange(0, cursorPosition);
     while (currentPosition < cursorPosition) {
         NSRange newlineRange = [text rangeOfString:@"\n"
                                             options:0
-                                              range:NSMakeRange(currentPosition, cursorPosition - currentPosition)];
-        if (newlineRange.location == NSNotFound) {
+                                              range:searchRange];
+        if (newlineRange.location == NSNotFound || newlineRange.location >= cursorPosition) {
             break; // No more newlines before cursor
         }
         lineNumber++;
         currentPosition = NSMaxRange(newlineRange);
+        // Adjust search range for next iteration
+        if (currentPosition < cursorPosition) {
+             searchRange = NSMakeRange(currentPosition, cursorPosition - currentPosition);
+        } else {
+            break; // Avoid infinite loop if cursor is right after newline
+        }
     }
 
     // Calculate column number
     NSRange lineRange = [text lineRangeForRange:NSMakeRange(cursorPosition, 0)];
     NSUInteger columnNumber = cursorPosition - lineRange.location + 1;
 
-    // Update the label
-    self.statusLabel.stringValue = [NSString stringWithFormat:@"Line: %lu, Col: %lu  ", (unsigned long)lineNumber, (unsigned long)columnNumber]; // Added padding
+    // Update the label with padding and no comma
+    // Add right padding with spaces
+    self.statusLabel.stringValue = [NSString stringWithFormat:@"Line: %lu   Col: %lu   ", (unsigned long)lineNumber, (unsigned long)columnNumber];
+}
+
+// Action method for the "Show Status Bar" menu item
+- (IBAction)toggleStatusBar:(id)sender {
+    BOOL currentVisibility = [[NSUserDefaults standardUserDefaults] boolForKey:kStatusBarVisibleKey];
+    // Toggle the state
+    [[NSUserDefaults standardUserDefaults] setBool:!currentVisibility forKey:kStatusBarVisibleKey];
+    // Apply the change
+    [self applyStatusBarVisibility];
+}
+
+// Applies the current visibility state to the status bar and adjusts layout
+- (void)applyStatusBarVisibility {
+    BOOL shouldBeVisible = [[NSUserDefaults standardUserDefaults] boolForKey:kStatusBarVisibleKey];
+    CGFloat statusBarHeight = 22.0;
+    NSRect contentBounds = self.window.contentView.bounds;
+    NSRect scrollFrame = contentBounds;
+    NSRect statusFrame = NSMakeRect(0, 0, contentBounds.size.width, statusBarHeight);
+
+    if (shouldBeVisible) {
+        self.statusLabel.hidden = NO;
+        // Make space for status bar at bottom
+        scrollFrame.origin.y += statusBarHeight;
+        scrollFrame.size.height -= statusBarHeight;
+    } else {
+        self.statusLabel.hidden = YES;
+        // Scroll view takes full height
+    }
+
+    // Animate the frame changes for smoothness (optional)
+    [[self.scrollView animator] setFrame:scrollFrame];
+    [[self.statusLabel animator] setFrame:statusFrame]; // Keep status label frame consistent for autoresizing
+
+    // Update the menu item state
+    self.statusBarMenuItem.state = shouldBeVisible ? NSControlStateValueOn : NSControlStateValueOff;
+
+    // Update the status text (will clear if hidden)
+    [self updateStatusLabel];
 }
 
 
@@ -140,7 +200,6 @@
         mainMenu = [[NSMenu alloc] initWithTitle:@"MainMenu"];
         [NSApp setMainMenu:mainMenu];
     } else {
-        // Clear existing default menus if necessary (like from template)
         [mainMenu removeAllItems];
     }
 
@@ -207,9 +266,15 @@
     [mainMenu addItem:viewMenuItem];
     NSMenu *viewMenu = [[NSMenu alloc] initWithTitle:@"View"];
     [viewMenuItem setSubmenu:viewMenu];
-    // Placeholder items - these don't do anything yet
+    // Placeholder item - does nothing yet
     [viewMenu addItemWithTitle:@"Show Line Numbers" action:nil keyEquivalent:@""];
-    [viewMenu addItemWithTitle:@"Show Status Bar" action:nil keyEquivalent:@""]; // This menu item doesn't control the new label
+    // Status Bar Toggle Item
+    self.statusBarMenuItem = [[NSMenuItem alloc] initWithTitle:@"Show Status Bar" action:@selector(toggleStatusBar:) keyEquivalent:@""];
+    // Set initial state based on UserDefaults
+    BOOL isVisible = [[NSUserDefaults standardUserDefaults] boolForKey:kStatusBarVisibleKey];
+    self.statusBarMenuItem.state = isVisible ? NSControlStateValueOn : NSControlStateValueOff;
+    [viewMenu addItem:self.statusBarMenuItem]; // Add the item
+
 
     // --- Window Menu ---
     NSMenuItem *windowMenuItem = [[NSMenuItem alloc] initWithTitle:@"Window" action:nil keyEquivalent:@""];
@@ -376,6 +441,15 @@
 // Opt-in to secure state restoration (recommended)
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app {
     return YES;
+}
+
+// Register default user defaults
++ (void)initialize {
+    if (self == [AppDelegate class]) {
+        // Set default value for status bar visibility (visible by default)
+        NSDictionary *defaults = @{kStatusBarVisibleKey: @YES};
+        [[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
+    }
 }
 
 
