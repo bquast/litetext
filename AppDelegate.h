@@ -16,6 +16,8 @@
 @property (strong) NSTextField *statusLabel;
 // Property to hold the menu item for toggling the status bar
 @property (strong) NSMenuItem *statusBarMenuItem;
+// Property to hold the menu item for toggling line numbers (Placeholder)
+@property (strong) NSMenuItem *lineNumbersMenuItem;
 
 
 @end

@@ -3,12 +3,12 @@
 
 // Define keys for UserDefaults
 static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
+// We don't need the line number key for this version
+// static NSString * const kLineNumbersVisibleKey = @"lineNumbersVisible";
+
 
 // Private interface category
 @interface AppDelegate ()
-// Only declare properties or methods truly private to the AppDelegate implementation here.
-// Standard selectors handled by the responder chain should NOT be declared here.
-
 // Private property to hold the main application window.
 @property (strong) NSWindow *window;
 @end
@@ -54,12 +54,11 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
     [self.scrollView setHasVerticalScroller:YES];
     [self.scrollView setHasHorizontalScroller:YES];
     [self.scrollView setBorderType:NSNoBorder];
+    // No ruler setup needed in this version
+    // [self.scrollView setHasVerticalRuler:YES];
+    // [self.scrollView setRulersVisible:YES];
 
-    // Use the content size of the scroll view for the text view frame
-    // Note: TextView frame will be adjusted by the scroll view
     self.textView = [[NSTextView alloc] initWithFrame:NSZeroRect];
-
-    // Configure text view properties
     [self.textView setMinSize:NSMakeSize(0.0, 0.0)]; // Let scrollview handle min size based on content
     [self.textView setMaxSize:NSMakeSize(FLT_MAX, FLT_MAX)];
     [self.textView setVerticallyResizable:YES];
@@ -149,8 +148,8 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
     NSUInteger columnNumber = cursorPosition - lineRange.location + 1;
 
     // Update the label with spaces and no comma
-    // No extra padding spaces needed here now, frame adjustment handles it.
-    self.statusLabel.stringValue = [NSString stringWithFormat:@"Line: %lu   Col: %lu", (unsigned long)lineNumber, (unsigned long)columnNumber];
+    // Use the format string including "Column"
+    self.statusLabel.stringValue = [NSString stringWithFormat:@"Line %lu   Column %lu", (unsigned long)lineNumber, (unsigned long)columnNumber];
 }
 
 // Action method for the "Show Status Bar" menu item
@@ -166,14 +165,14 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
 - (void)applyStatusBarVisibility {
     BOOL shouldBeVisible = [[NSUserDefaults standardUserDefaults] boolForKey:kStatusBarVisibleKey];
     CGFloat statusBarHeight = 22.0;
-    CGFloat rightPadding = 8.0; // Define padding from the right edge
+    CGFloat rightPadding = 8.0;
+    CGFloat verticalOffset = -3.0;
     NSRect contentBounds = self.window.contentView.bounds;
     NSRect scrollFrame = contentBounds;
-    // Adjust status frame for padding
-    NSRect statusFrame = NSMakeRect(0, // X origin
-                                   0, // Y origin
-                                   contentBounds.size.width - rightPadding, // Width (reduced by padding)
-                                   statusBarHeight); // Height
+    NSRect statusFrame = NSMakeRect(0,
+                                   verticalOffset,
+                                   contentBounds.size.width - rightPadding,
+                                   statusBarHeight);
 
     if (shouldBeVisible) {
         self.statusLabel.hidden = NO;
@@ -185,10 +184,7 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
         // Scroll view takes full height
     }
 
-    // Animate the frame changes for smoothness (optional)
-    // Use non-animator calls first to set the final state immediately,
-    // then optionally use animator if smooth transition is desired.
-    // For simplicity and immediate effect, we'll skip animator here.
+    // Apply frame changes
     [self.scrollView setFrame:scrollFrame];
     [self.statusLabel setFrame:statusFrame];
 
@@ -205,7 +201,6 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
 
 // Sets up the main application menu bar with more standard items.
 - (void)setupMainMenu {
-    // Get the shared application instance's main menu or create one.
     NSMenu *mainMenu = [NSApp mainMenu];
     if (!mainMenu) {
         mainMenu = [[NSMenu alloc] initWithTitle:@"MainMenu"];
@@ -278,7 +273,8 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
     NSMenu *viewMenu = [[NSMenu alloc] initWithTitle:@"View"];
     [viewMenuItem setSubmenu:viewMenu];
     // Placeholder item - does nothing yet
-    [viewMenu addItemWithTitle:@"Show Line Numbers" action:nil keyEquivalent:@""];
+    self.lineNumbersMenuItem = [[NSMenuItem alloc] initWithTitle:@"Show Line Numbers" action:nil keyEquivalent:@""]; // Keep placeholder
+    [viewMenu addItem:self.lineNumbersMenuItem];
     // Status Bar Toggle Item
     self.statusBarMenuItem = [[NSMenuItem alloc] initWithTitle:@"Show Status Bar" action:@selector(toggleStatusBar:) keyEquivalent:@""];
     // Set initial state based on UserDefaults
@@ -458,6 +454,7 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
 + (void)initialize {
     if (self == [AppDelegate class]) {
         // Set default value for status bar visibility (visible by default)
+        // No default needed for line numbers in this version
         NSDictionary *defaults = @{kStatusBarVisibleKey: @YES};
         [[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
     }
