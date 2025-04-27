@@ -18,7 +18,7 @@
 		54A38B122DB79CEC008119EC /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		54A38B172DB79CED008119EC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		54A38B1C2DB79CED008119EC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		54A38B1E2DB79CED008119EC /* MacNote.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MacNote.entitlements; sourceTree = "<group>"; };
+		54A38B1E2DB79CED008119EC /* litetext.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = litetext.entitlements; sourceTree = "<group>"; };
 		54BF2E922DBBB68E00B115E9 /* litetext.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = litetext.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -40,7 +40,7 @@
 				54A38B112DB79CEC008119EC /* AppDelegate.h */,
 				54A38B122DB79CEC008119EC /* AppDelegate.m */,
 				54A38B172DB79CED008119EC /* Assets.xcassets */,
-				54A38B1E2DB79CED008119EC /* MacNote.entitlements */,
+				54A38B1E2DB79CED008119EC /* litetext.entitlements */,
 				54A38B1C2DB79CED008119EC /* main.m */,
 				54BF2E922DBBB68E00B115E9 /* litetext.app */,
 			);
@@ -246,7 +246,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = MacNote.entitlements;
+				CODE_SIGN_ENTITLEMENTS = litetext.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -277,7 +277,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = MacNote.entitlements;
+				CODE_SIGN_ENTITLEMENTS = litetext.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
