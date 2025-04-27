@@ -30,19 +30,22 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
     [self.window setRestorationClass:[self class]];
 
     // --- Status Label Setup ---
-    CGFloat statusBarHeight = 22.0; // Height for the status bar label
-    // Initial frame setup - will be adjusted in applyStatusBarVisibility
-    self.statusLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, self.window.contentView.bounds.size.width, statusBarHeight)];
+    self.statusLabel = [[NSTextField alloc] init];
     [self.statusLabel setEditable:NO];
-    [self.statusLabel setSelectable:NO];
     [self.statusLabel setBezeled:NO];
     [self.statusLabel setDrawsBackground:NO];
     [self.statusLabel setAlignment:NSTextAlignmentRight];
     [self.statusLabel setTextColor:[NSColor secondaryLabelColor]];
-    // Use monospaced font, small size
-    [self.statusLabel setFont:[NSFont userFixedPitchFontOfSize:[NSFont smallSystemFontSize]]];
-    // Autoresizing: Stick to bottom, left, right edges. Flexible width.
-    [self.statusLabel setAutoresizingMask:(NSViewWidthSizable | NSViewMaxYMargin)];
+    
+    // Set frame with FIXED HEIGHT OF 22
+    [self.statusLabel setFrame:NSMakeRect(0, 0, 1200, 22)];
+    
+    // Override any possible resize behavior
+    [self.statusLabel setFrameSize:NSMakeSize(1200, 22)];
+    
+    // Remove ANY possibility of auto-anything
+    [self.statusLabel setAutoresizingMask:0];
+    
     // Add status label to the window's content view
     [self.window.contentView addSubview:self.statusLabel];
 
@@ -50,7 +53,7 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
     // Frame is calculated later based on status bar visibility
     self.scrollView = [[NSScrollView alloc] initWithFrame:NSZeroRect]; // Start with zero rect
     // Autoresizing: Stick to top/left/right, flexible height
-    [self.scrollView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable | NSViewMinYMargin)];
+    [self.scrollView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
     [self.scrollView setHasVerticalScroller:YES];
     [self.scrollView setHasHorizontalScroller:YES];
     [self.scrollView setBorderType:NSNoBorder];
@@ -163,35 +166,30 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
 
 // Applies the current visibility state to the status bar and adjusts layout
 - (void)applyStatusBarVisibility {
-    BOOL shouldBeVisible = [[NSUserDefaults standardUserDefaults] boolForKey:kStatusBarVisibleKey];
-    CGFloat statusBarHeight = 22.0;
-    CGFloat rightPadding = 8.0;
-    CGFloat verticalOffset = -4.5;
-    NSRect contentBounds = self.window.contentView.bounds;
-    NSRect scrollFrame = contentBounds;
-    NSRect statusFrame = NSMakeRect(0,
-                                   verticalOffset,
-                                   contentBounds.size.width - rightPadding,
-                                   statusBarHeight);
-
-    if (shouldBeVisible) {
-        self.statusLabel.hidden = NO;
-        // Make space for status bar at bottom
-        scrollFrame.origin.y += statusBarHeight;
-        scrollFrame.size.height -= statusBarHeight;
+    BOOL isVisible = [[NSUserDefaults standardUserDefaults] boolForKey:kStatusBarVisibleKey];
+    [self.statusLabel setHidden:!isVisible];
+    
+    if (isVisible) {
+        NSRect frame = self.statusLabel.frame;
+        frame.size.width = self.window.contentView.bounds.size.width;
+        frame.size.height = 22;  // FIXED. FOREVER. 22 PIXELS.
+        frame.origin.y = 0;  // ALWAYS AT THE BOTTOM
+        frame.origin.x = 0;
+        [self.statusLabel setFrame:frame];
+        
+        // Position scroll view ABOVE the status bar, period.
+        [self.scrollView setFrame:NSMakeRect(0, 22,
+                                           self.window.contentView.bounds.size.width,
+                                           self.window.contentView.bounds.size.height - 22)];
     } else {
-        self.statusLabel.hidden = YES;
-        // Scroll view takes full height
+        // When hidden, let scroll view take full space
+        [self.scrollView setFrame:self.window.contentView.bounds];
     }
-
-    // Apply frame changes
-    [self.scrollView setFrame:scrollFrame];
-    [self.statusLabel setFrame:statusFrame];
 
     // Update the menu item state
     // Ensure statusBarMenuItem exists before accessing it
     if (self.statusBarMenuItem) {
-         self.statusBarMenuItem.state = shouldBeVisible ? NSControlStateValueOn : NSControlStateValueOff;
+         self.statusBarMenuItem.state = !self.statusLabel.isHidden ? NSControlStateValueOn : NSControlStateValueOff;
     }
 
     // Update the status text (will clear if hidden)
