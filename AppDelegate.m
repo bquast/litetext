@@ -375,43 +375,79 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
 
 // Delegate method called when the application is asked to open a file (e.g., double-click in Finder)
 - (BOOL)application:(NSApplication *)sender openFile:(NSString *)filename {
-    NSLog(@"application:openFile: called with filename: %@", filename);
+    NSLog(@"[AppDelegate application:openFile:] called with filename: %@", filename); // Log entry
     NSURL *fileURL = [NSURL fileURLWithPath:filename];
-    return [self openFileAtURL:fileURL];
+
+    // Check if window/view are ready, if not, try deferring slightly
+    if (!self.window || !self.textView) {
+        NSLog(@"[AppDelegate application:openFile:] Window or TextView not ready. Deferring...");
+        // Use weak reference to avoid potential retain cycle in block
+        __weak AppDelegate *weakSelf = self;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            AppDelegate *strongSelf = weakSelf;
+            if (strongSelf) {
+                 NSLog(@"[AppDelegate application:openFile:] Deferred execution starting.");
+                [strongSelf openFileAtURL:fileURL];
+            }
+        });
+        return YES; // Indicate we will handle it asynchronously
+    } else {
+        NSLog(@"[AppDelegate application:openFile:] Window and TextView ready. Calling openFileAtURL immediately.");
+        return [self openFileAtURL:fileURL];
+    }
 }
 
 // Common method to open and display a file from a URL
 - (BOOL)openFileAtURL:(NSURL *)fileURL {
+    NSLog(@"[AppDelegate openFileAtURL:] called with URL: %@", fileURL); // Log entry
+
     if (!fileURL) {
+        NSLog(@"[AppDelegate openFileAtURL:] Error: fileURL is nil.");
         return NO;
     }
 
+    // Explicitly check window and text view again, as deferred call might have issues
     if (!self.window || !self.textView) {
-        NSLog(@"Error opening file: Window or TextView not ready.");
+        NSLog(@"[AppDelegate openFileAtURL:] Error: Window (%@) or TextView (%@) still not ready after deferral.", self.window, self.textView);
+        // Optionally show an alert here if deferred opening fails
+        NSAlert *alert = [[NSAlert alloc] init];
+        [alert setMessageText:@"Error Loading File"];
+        [alert setInformativeText:@"The application window could not be prepared in time."];
+        [alert addButtonWithTitle:@"OK"];
+        [alert runModal]; // Run synchronously as window might not be available for sheet
         return NO;
     }
+
+    NSLog(@"[AppDelegate openFileAtURL:] Window and TextView confirmed ready.");
+
+    // Bring window to front BEFORE loading content
+    [self.window makeKeyAndOrderFront:nil];
+    NSLog(@"[AppDelegate openFileAtURL:] Window ordered front.");
+
 
     NSError *error = nil;
-    NSLog(@"Attempting to open file at URL: %@", fileURL);
+    NSLog(@"[AppDelegate openFileAtURL:] Attempting to read file content from URL: %@", fileURL);
     NSString *fileContents = [NSString stringWithContentsOfURL:fileURL
                                                       encoding:NSUTF8StringEncoding
                                                          error:&error];
     if (fileContents) {
-        NSLog(@"Successfully read file content.");
+        NSLog(@"[AppDelegate openFileAtURL:] Successfully read %lu characters.", (unsigned long)fileContents.length);
         [self.textView setString:fileContents];
         [self.window setTitleWithRepresentedFilename:[fileURL path]];
         [self.window setDocumentEdited:NO];
+        self.currentFilePath = [fileURL path]; // Store the path
         // Update status after loading new content
         [self updateStatusLabel];
+        NSLog(@"[AppDelegate openFileAtURL:] File content set successfully.");
         return YES;
     } else {
-        NSLog(@"Error reading file: %@", [error localizedDescription]);
+        NSLog(@"[AppDelegate openFileAtURL:] Error reading file: %@", [error localizedDescription]);
         dispatch_async(dispatch_get_main_queue(), ^{
             NSAlert *alert = [[NSAlert alloc] init];
             [alert setMessageText:@"Error Opening File"];
             [alert setInformativeText:[error localizedDescription]];
             [alert addButtonWithTitle:@"OK"];
-             if (self.window) {
+             if (self.window && self.window.isVisible) { // Check if window is available for sheet
                 [alert beginSheetModalForWindow:self.window completionHandler:nil];
              } else {
                  [alert runModal];
@@ -430,6 +466,17 @@ static NSString * const kStatusBarVisibleKey = @"statusBarVisible";
 // Delegate method to determine if the app should terminate when the last window is closed.
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender {
     return YES;
+}
+
+// Implement applicationShouldHandleReopen for better behavior when app is already running
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)sender hasVisibleWindows:(BOOL)flag {
+    NSLog(@"[AppDelegate applicationShouldHandleReopen:] called with flag: %d", flag);
+    if (!flag) {
+        // If no windows are visible (e.g., main window was closed),
+        // bring the main window back.
+        [self.window makeKeyAndOrderFront:nil];
+    }
+    return YES; // YES allows the app to be reopened
 }
 
 // Required for window restoration

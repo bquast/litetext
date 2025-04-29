@@ -18,6 +18,8 @@
 @property (strong) NSMenuItem *statusBarMenuItem;
 // Property to hold the menu item for toggling line numbers (Placeholder)
 @property (strong) NSMenuItem *lineNumbersMenuItem;
+// Property to hold the current file path
+@property (nonatomic, strong) NSString *currentFilePath;
 
 
 @end
